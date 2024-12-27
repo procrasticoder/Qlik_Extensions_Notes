@@ -1,0 +1,70 @@
+//reference link : https://community.qlik.com/t5/Integration-Extension-APIs/Dimensions-amp-Measures-as-columns-in-Qlik-Sense-properties/td-p/2021036
+column: {
+              type: "items",
+              component: "columns",
+              translation: "Common.Data",
+              sortIndexRef: "qHyperCubeDef.qColumnOrder",
+              allowMove: true,
+              allowAdd: true,
+              addTranslation: "Common.Columns",
+              items: {
+                dimensions: {
+                  type: "array",
+                  uses: "dimensions",
+                  min: 0,
+                  max: 10,
+                  grouped: true,
+                  ref: "qHyperCubeDef.qDimensions",
+                  add: (a, b, c) => {
+                    b["qHyperCubeDef"]["columnWidths"] = Array(c.hcProperties.qInterColumnSortOrder.length).fill(-1);
+                    return columnAdd(
+                      c.hcProperties.qColumnOrder,
+                      c.getDimensions().length - 1
+                    );
+                  },
+                  remove: (a, b, c, d) => {
+                    b["qHyperCubeDef"]["columnWidths"].pop();
+                    return columnRemove(c.hcProperties.qColumnOrder, d);
+                  }
+                },
+                measures: {
+                  type: "array",
+                  uses: "measures",
+                  min: 0,
+                  max: 10,
+                  grouped: true,
+                  ref: "qHyperCubeDef.qMeasures",
+                  add: (a, b, c) => {
+                    b["qHyperCubeDef"]["columnWidths"] = Array(c.hcProperties.qInterColumnSortOrder.length).fill(-1);
+                    return columnAdd(
+                      c.hcProperties.qColumnOrder,
+                      c.getDimensions().length + c.getMeasures().length - 1
+                    );
+                  },
+                  remove: (a, b, c, d) => {
+                    b["qHyperCubeDef"]["columnWidths"].pop();
+                    return columnRemove(
+                      c.hcProperties.qColumnOrder,
+                      c.getDimensions().length + d
+                    );
+                  }
+                },
+              }
+            }
+
+//Functions
+  function columnAdd(arr, val) {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] >= val) arr[i] += 1;
+    }
+    arr.push(val)
+    return arr;
+  }
+  function columnRemove(arr, val) {
+    const indx = arr.indexOf(val);
+    arr.splice(indx, 1);
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] > val) arr[i] -= 1
+    }
+    return arr;
+  }
